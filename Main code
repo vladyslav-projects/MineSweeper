@@ -1,0 +1,133 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define N 10 // MAX 52 !
+
+int calculate(const int (*board)[N] , int x , int y)
+{
+    int sum = 0 ;
+    int nx ; 
+    int ny ; 
+    for(int dx = -1 ; dx <= 1 ; dx++){
+        for(int dy = -1 ; dy <= 1 ; dy++){
+            nx = x - dx ;
+            ny = y - dy ;
+
+            if(nx >= 0 && nx < N && ny >= 0 && ny < N)
+                sum += board[nx][ny];
+        }
+    }
+    if(board[x][y] == 1) return -1 ;
+    return sum ;
+}
+
+void open_zeros(int (*boardcl)[N], const int (*board)[N], int x , int y)
+{
+        if(calculate(board, x, y) != 0)
+        return;
+        for(int dx = -1 ; dx <= 1 ; dx++){
+        for(int dy = -1 ; dy <= 1 ; dy++){
+            int nx = x - dx ;
+            int ny = y - dy ;
+
+            if(nx >= 0 && nx < N && ny >= 0 && ny < N){
+                int value = calculate(board, x, y) ;
+                if(boardcl[nx][ny] == 0){
+                    boardcl[nx][ny] = 1; 
+                    if(value == 0)open_zeros(boardcl, board, nx , ny);
+                }
+                }
+        }
+    }
+}
+
+void print_cl(int (*boardcl)[N], const int (*board)[N])
+{
+    int value ;
+    printf("    ");
+    for(int i = 0; i < N; i++){
+        char temp = i + 65 ;
+        if(temp > 25+65)
+        temp = i + (97-26) ;
+        printf("%c ", temp);
+    }
+    putchar('\n');
+    for(int i = 0 ; i < N ; i++){
+        char temp = i + 65 ;
+        if(temp > 25+65)
+        temp = i + (97-26) ;
+        printf("%c   ", temp);
+            for(int j = 0 ; j < N ; j++){
+                value = calculate(board, i , j);
+                if(boardcl[i][j]) printf("%d ", value);
+                else printf("%s", "# ");
+            }putchar('\n');
+        }
+}
+
+
+int main(void)
+{  
+    int won = 0;
+    int lose = 0;
+    puts("MINE_SWEEPER_GAME");
+    printf("\nChoose difficulty\n 1 - Easy\n 2 - Medium \n 3 - Hard \n\n");
+    int difficulty;
+    scanf("%d", &difficulty);
+    difficulty = difficulty!=3 ? (difficulty!=2 ? 8 : 7) : 5 ; 
+    srand(time(NULL)) ; 
+    int board[N][N] = {0} ;
+    int boardcl[N][N] = {0} ;
+    int a = 1;
+    for(int i = 0 ; i < N ; i++){
+            for(int j = 0 ; j < N ; j++){
+                board[i][j] = (rand()%difficulty == 0) ;
+            }
+    }
+    print_cl(boardcl, board);
+    while(a){
+    int safe = 0;
+    int temp1;
+    char temp = (N-1)+65 ; temp1 = 65;
+        if(temp > 25+65){
+        temp = (N-1) + (97-26) ; temp1 = 97;
+        }
+    printf("\nWhere would you like to go? (row A-%c) (column A-%c)\n\n", temp , temp);
+    char x, y ;
+    if(scanf(" %c %c", &x , &y ) != 2) break ;
+
+    x -=temp1 ;
+    y -=temp1;
+    if(x >= 0 && x < N && y >= 0 && y < N ) {
+        boardcl[x][y] = 1 ;
+        if(a == 1){ board[x][y] = 0 ; a++; }
+        if(board[x][y] == 1){print_cl(boardcl, board); lose = 1; ;break;}
+        open_zeros(boardcl , board , x , y);
+        print_cl(boardcl, board) ;
+    }  
+    for(int i = 0; i<N; i++){
+        for(int j = 0; j<N; j++){
+            if(boardcl[i][j] == 0 && board[i][j] == 0)
+                safe++ ;
+        }
+    }
+    if(safe == 0){won = 1; break;}
+    }
+    putchar('\n');
+    if(lose){puts(" GAME END ! YOU LOSE !\n");
+        for(int i = 0; i<N; i++){
+        for(int j = 0; j<N; j++)
+            boardcl[i][j] = 1;
+    }
+        print_cl(boardcl, board);
+    }
+    if(won){puts(" GAME END ! YOU WON! \n");
+        for(int i = 0; i<N; i++){
+        for(int j = 0; j<N; j++)
+            boardcl[i][j] = 1;
+    }
+        print_cl(boardcl, board);
+    }
+    return 0;
+}
